@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+             background-image:url("https://img.freepik.com/free-photo/book-outdoor_157947-2080.jpg?size=626&ext=jpg") ;
+             background-repeat: no-repeat;
+background-attachment: fixed;
+background-size:cover;
+             display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+
+        .container {
+            background: rgba(155, 155, 155, 0.3);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 30px;
+            color: #000000;
+        }
+
+        input[type="text"], input[type="time"] {
+            width: calc(50% - 25px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            font-size: 16px;
+            font-family: bold;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 30px;
+            background-color: #136552;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #19291d;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        li.completed {
+            text-decoration: line-through;
+            color: #888;
+            background: #e9ecef;
+        }
+
+        li button {
+            background-color: #90214a;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            cursor: pointer;
+            padding: 5px 10px;
+            transition: background-color 0.3s;
+        }
+
+        li button:hover {
+            background-color: #37191c;
+        }
+
+        .reschedule-btn {
+            background-color: #245468;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .reschedule-btn:hover {
+            background-color: #172a3e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>To-Do List</h1>
+        <input type="text" id="new-task" placeholder="Add a new task...">
+        <input type="time" id="task-time">
+        <button id="add-task-btn">Add Task</button>
+        <ul id="task-list"></ul>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const taskInput = document.getElementById('new-task');
+            const taskTimeInput = document.getElementById('task-time');
+            const addTaskBtn = document.getElementById('add-task-btn');
+            const taskList = document.getElementById('task-list');
+
+            addTaskBtn.addEventListener('click', addTask);
+            taskInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    addTask();
+                }
+            });
+
+            function addTask() {
+                const taskText = taskInput.value.trim();
+                const taskTime = taskTimeInput.value;
+
+                if (taskText === '' || taskTime === '') {
+                    alert('Please enter a task and time');
+                    return;
+                }
+
+                const listItem = document.createElement('li');
+
+                const checkBox = document.createElement('input');
+                checkBox.type = 'checkbox';
+                checkBox.addEventListener('change', () => {
+                    listItem.classList.toggle('completed');
+                });
+
+                const taskSpan = document.createElement('span');
+                taskSpan.textContent = `${taskText} - ${taskTime}`;
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.addEventListener('click', () => {
+                    taskList.removeChild(listItem);
+                });
+
+                const rescheduleBtn = document.createElement('button');
+                rescheduleBtn.textContent = 'Reschedule';
+                rescheduleBtn.className = 'reschedule-btn';
+                rescheduleBtn.addEventListener('click', () => {
+                    const newTime = prompt('Enter new time (HH:MM):');
+                    if (newTime) {
+                        const [hours, minutes] = newTime.split(':');
+                        const now = new Date();
+                        const taskDateTime = new Date();
+                        taskDateTime.setHours(hours, minutes, 0, 0);
+                        if (taskDateTime <= now) {
+                            alert('New time must be in the future');
+                            return;
+                        }
+                        taskTimeInput.value = newTime;
+                        taskSpan.textContent = `${taskText} - ${newTime}`;
+                        scheduleTask(taskText, newTime);
+                    }
+                });
+
+                listItem.appendChild(checkBox);
+                listItem.appendChild(taskSpan);
+                listItem.appendChild(deleteBtn);
+                listItem.appendChild(rescheduleBtn);
+
+                taskList.appendChild(listItem);
+                taskInput.value = '';
+                taskTimeInput.value = '';
+
+                scheduleTask(taskText, taskTime);
+            }
+
+            function scheduleTask(taskText, taskTime) {
+                const now = new Date();
+                const taskDateTime = new Date();
+                const [hours, minutes] = taskTime.split(':');
+                taskDateTime.setHours(hours, minutes, 0, 0);
+
+                const timeToNotification = taskDateTime.getTime() - now.getTime();
+
+                if (timeToNotification > 0) {
+                    setTimeout(() => {
+                        alert(`Time to complete: ${taskText}`);
+                    }, timeToNotification);
+                }
+            }
+
+            function clearTasks() {
+                const now = new Date();
+                const expireTime = localStorage.getItem('expireTime');
+                if (!expireTime || now.getTime() > expireTime) {
+                    taskList.innerHTML = '';
+                    localStorage.setItem('expireTime', now.setHours(24, 0, 0, 0));
+                }
+            }
+
+            clearTasks();
+        });
+    </script>
+</body>
+</html>
